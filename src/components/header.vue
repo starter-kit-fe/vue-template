@@ -6,10 +6,6 @@ import { RouterLink } from 'vue-router'
 <style scoped></style>
 <template>
     <div class="py-10">
-        <div class="text-center">
-            <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-        </div>
-        <br>
         <div class="">
             <div class="">
                 <h1 class="text-4xl font-bold underline">You did it!</h1>

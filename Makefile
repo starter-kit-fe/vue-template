@@ -5,15 +5,18 @@ NEXT = $(NPM) run
 GIT = git
 
 # 部署相关变量
-SSH_NAME_STAGE = fof_pro_test
-SSH_NAME_PROD = fof_pro
+SSH_NAME_STAGE = test
+SSH_NAME_PROD = pro
 TARGET_PATH = /data/apps/web-modules/web
 ZIP_FILE = dist.tar.gz
 WEB_URL_STAGE = http://stage.cn/irtemplate
 WEB_URL_PROD = http://prod.cn/irtemplate
+# 获取当前时间并格式化版本号
+VERSION := $(shell date +"%y.%m%d.%H%M")
 
 # 默认目标
 .DEFAULT_GOAL := help
+
 
 # 帮助信息
 .PHONY: help
@@ -31,6 +34,25 @@ help:
 	@echo "  make git-commit - Commit staged changes"
 	@echo "  make git-push   - Push commits to remote"
 	@echo "  make git-pull   - Pull changes from remote"
+
+update-version:
+	@echo "Updating package.json version to $(VERSION)"
+	@node -e "const fs = require('fs'); \
+		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); \
+		pkg.version = '$(VERSION)'; \
+		fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+# 提交版本变更到Git
+commit-version: update-version
+	@echo "Committing version change"
+	git add .
+	git commit -m "bump version to v$(VERSION)"
+	git push
+
+# 创建并推送标签
+push-tag: commit-version
+	@echo "Creating and pushing tag v$(VERSION)"
+	git tag v$(VERSION)
+	git push origin v$(VERSION)
 
 # 安装依赖
 .PHONY: install

@@ -19,8 +19,10 @@ logBuildInfo()
 
 <template>
   <el-config-provider :size="size" :z-index="zIndex" :locale="locale">
-    <Header />
-    <RouterView />
+    <div class="container mx-auto max-w-lg">
+      <Header />
+      <RouterView />
+    </div>
   </el-config-provider>
 </template>
 
