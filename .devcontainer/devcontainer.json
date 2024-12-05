@@ -1,7 +1,6 @@
 {
     "name": "node:v22.9.0",
     "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-    "customizations": {},
     "remoteUser": "root",
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly"
@@ -14,5 +13,14 @@
     "runArgs": [
         "--volume=/run/host-services/ssh-auth.sock:/ssh-agent",
         "--network=host"
-    ]
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bradlc.vscode-tailwindcss",
+                "esbenp.prettier-vscode",
+                "Vue.volar"
+            ]
+        }
+    }
 }

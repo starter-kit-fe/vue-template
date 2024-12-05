@@ -20,7 +20,7 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       vue(),
-      vueDevTools(),
+      // vueDevTools(),
       AutoImport({
         resolvers: [ElementPlusResolver()],
       }),
