@@ -1,138 +1,84 @@
-# 变量定义
-NODE = node
-NPM = bun
-NEXT = $(NPM) run
-GIT = git
-
-# 部署相关变量
-SSH_NAME_STAGE = test
-SSH_NAME_PROD = pro
-TARGET_PATH = /data/apps/web-modules/web
-ZIP_FILE = dist.tar.gz
-WEB_URL_STAGE = http://stage.cn/irtemplate
-WEB_URL_PROD = http://prod.cn/irtemplate
 # 获取当前时间并格式化版本号
-VERSION := $(shell date +"%y.%m%d.%H%M")
+VERSION := $(shell TZ="Asia/Shanghai" date +"%y.%m%d.%H%M")
 
-# 默认目标
-.DEFAULT_GOAL := help
+# 定义变量并增加默认值
+ZIP_FILE ?= dist.tar.gz
+TARGET_PATH ?= /app/nannan/admin
+SSH_NAME_STAGE ?= ssc
+SSH_NAME_PROD ?= ssc
+WEB_URL_STAGE ?= http://admin.ssc.datumwealth.com/
+WEB_URL_PROD ?= http://prod.cn/irtemplate
 
+# 检查 npm 是否安装
+NPM := $(shell command -v npm 2> /dev/null)
+ifeq ($(strip $(NPM)),)
+$(error npm is not installed. Please install Node.js and npm)
+endif
 
-# 帮助信息
-.PHONY: help
-help:
-	@echo "Available commands:"
-	@echo "  make install     - Install dependencies"
-	@echo "  make dev        - Start development server"
-	@echo "  make build      - Build the project"
-	@echo "  make lint       - Run linter"
-	@echo "  make clean      - Clean build artifacts"
-	@echo "  make deploy-stage - Deploy to staging environment"
-	@echo "  make deploy-prod  - Deploy to production environment"
-	@echo "  make git-status - Show git status"
-	@echo "  make git-add    - Stage all changes"
-	@echo "  make git-commit - Commit staged changes"
-	@echo "  make git-push   - Push commits to remote"
-	@echo "  make git-pull   - Pull changes from remote"
-
+# 更新版本号，增加错误处理
 update-version:
-	@echo "Updating package.json version to $(VERSION)"
-	@node -e "const fs = require('fs'); \
-		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); \
-		pkg.version = '$(VERSION)'; \
-		fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+	@if [ -f "package.json" ]; then \
+		echo "Updating package.json version to $(VERSION)"; \
+		node -e "const fs = require('fs'); \
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); \
+			pkg.version = '$(VERSION)'; \
+			fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));" || \
+		(echo "Failed to update package.json"; exit 1); \
+	else \
+		echo "package.json not found"; \
+		exit 1; \
+	fi
+
 # 提交版本变更到Git
-commit-version: update-version
+push-version: update-version
 	@echo "Committing version change"
-	git add .
-	git commit -m "bump version to v$(VERSION)"
-	git push
+	@git diff --quiet package.json || \
+		(git add package.json && \
+		git commit -m "bump version to v$(VERSION)" && \
+		git push) || \
+		(echo "Git commit failed"; exit 1)
 
 # 创建并推送标签
-push-tag: commit-version
+push-tag: push-version
 	@echo "Creating and pushing tag v$(VERSION)"
-	git tag v$(VERSION)
-	git push origin v$(VERSION)
+	@git tag v$(VERSION) && \
+		git push origin v$(VERSION) || \
+		(echo "Failed to create and push tag"; exit 1)
 
-# 安装依赖
-.PHONY: install
-install:
-	$(NPM) install
-
-# 启动开发服务器
-.PHONY: dev
+# 开发环境
 dev:
-	$(NEXT) dev
+	@$(NPM) run dev
 
-# 构建项目
-.PHONY: build
-build:
-	$(NEXT) build
-
-# 运行 linter
-.PHONY: lint
-lint:
-	$(NEXT) lint
-
-# 清理构建产物
-.PHONY: clean
-clean:
-	rm -rf dist
-	rm -f $(ZIP_FILE)
-
-# 打包 dist 目录
-.PHONY: zip-dist
-zip-dist:
-	tar -czf $(ZIP_FILE) dist
-
-# 部署到测试环境
-.PHONY: deploy-stage
-deploy-stage: build zip-dist
-	@echo "Deploying to staging environment..."
-	scp $(ZIP_FILE) $(SSH_NAME_STAGE):$(TARGET_PATH)
-	ssh $(SSH_NAME_STAGE) "cd $(TARGET_PATH) && \
-		tar -xzf $(ZIP_FILE) && \
-		rm $(ZIP_FILE)"
-	rm $(ZIP_FILE)
-	@echo "Staging deployment complete. Visit: $(WEB_URL_STAGE)"
-
-# 部署到生产环境
-.PHONY: deploy-prod
-deploy-prod: build zip-dist
-	@echo "Deploying to production environment..."
-	@read -p "Are you sure you want to deploy to production? [y/N] " confirm; \
+# 构建通用函数，带有模式参数
+define deploy
+	@read -p "Are you sure you want to deploy to $(1) environment? [y/N] " confirm; \
 	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
-		scp $(ZIP_FILE) $(SSH_NAME_PROD):$(TARGET_PATH); \
-		ssh $(SSH_NAME_PROD) "cd $(TARGET_PATH) && \
+		$(MAKE) build MODE=--mode\ $(2); \
+		tar -czf $(ZIP_FILE) dist; \
+		scp $(ZIP_FILE) $(3):$(TARGET_PATH); \
+		ssh $(3) "cd $(TARGET_PATH) && \
 			tar -xzf $(ZIP_FILE) && \
 			rm $(ZIP_FILE)"; \
 		rm $(ZIP_FILE); \
-		echo "Production deployment complete. Visit: $(WEB_URL_PROD)"; \
+		echo "$(1) deployment complete. Visit: $(4)"; \
 	else \
 		echo "Deployment cancelled."; \
-		rm $(ZIP_FILE); \
+		rm -f $(ZIP_FILE); \
 	fi
+endef
 
-# Git 相关命令
-.PHONY: git-status
-git-status:
-	$(GIT) status
+# 部署到测试环境
+deploy-stage:
+	@echo "Deploying to staging environment..."
+	$(call deploy,staging,stage,$(SSH_NAME_STAGE),$(WEB_URL_STAGE))
 
-.PHONY: git-add
-git-add:
-	$(GIT) add .
+# 部署到生产环境
+deploy:
+	@echo "Deploying to production environment..."
+	$(call deploy,production,production,$(SSH_NAME_PROD),$(WEB_URL_PROD))
 
-.PHONY: git-commit
-git-commit:
-	@read -p "Enter commit message: " message; \
-	$(GIT) commit -m "$$message"
+# 构建
+build:
+	@$(NPM) run build -- $(MODE)
 
-.PHONY: git-pull
-git-pull:
-	$(GIT) pull
-
-# 快速提交所有更改并推送
-.PHONY: push
-push: git-add
-	@read -p "Enter commit message: " message; \
-	$(GIT) commit -m "$$message" && $(GIT) push
+.PHONY: update-version commit-version push-tag dev deploy-stage deploy build

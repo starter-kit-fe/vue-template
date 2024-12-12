@@ -1,26 +1,29 @@
 {
-    "name": "node:v22.9.0",
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-    "remoteUser": "root",
-    "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly"
-    ],
-    "remoteEnv": {
-        "SSH_AUTH_SOCK": "/ssh-agent"
-    },
-    "postCreateCommand": "curl -fsSL https://bun.sh/install | bash",
-    "initializeCommand": "mkdir -p ${localEnv:HOME}/.ssh",
-    "runArgs": [
-        "--volume=/run/host-services/ssh-auth.sock:/ssh-agent",
-        "--network=host"
-    ],
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "bradlc.vscode-tailwindcss",
-                "esbenp.prettier-vscode",
-                "Vue.volar"
-            ]
-        }
+  "name": "node:v22.9.0",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode"
+      ]
     }
+  },
+  "remoteUser": "root",
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
+    "source=/etc/localtime,target=/etc/localtime,type=bind",
+    "source=/etc/timezone,target=/etc/timezone,type=bind"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent",
+    "TZ": "Asia/Shanghai"
+  },
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.ssh",
+  "runArgs": [
+    "--volume=/run/host-services/ssh-auth.sock:/ssh-agent",
+    "--network=host",
+    "--privileged"
+  ]
 }
