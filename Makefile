@@ -33,7 +33,7 @@ update-version:
 push-version: update-version
 	@echo "Committing version change"
 	@git diff --quiet package.json || \
-		(git add package.json && \
+		(git add . && \
 		git commit -m "bump version to v$(VERSION)" && \
 		git push) || \
 		(echo "Git commit failed"; exit 1)
