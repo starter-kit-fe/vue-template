@@ -1,23 +1,20 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from "node:url";
 
 import { defineConfig, loadEnv } from "vite";
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import { dayjs } from 'element-plus'
-import tailwindcss from '@tailwindcss/vite';
-
+import vue from "@vitejs/plugin-vue";
+import vueDevTools from "vite-plugin-vue-devtools";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import { dayjs } from "element-plus";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd());
+  process.env.VITE_APP_BUILD_TIME = dayjs().format("YYYY-MM-DD HH:mm:ss");
   return {
     base: env.VITE_APP_BASE_URL,
-    define: {
-      VITE_APP_BUILD_TIME: `"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`
-    },
     plugins: [
       vue(),
       // vueDevTools(),
@@ -27,21 +24,22 @@ export default defineConfig(({ command, mode }) => {
       Components({
         resolvers: [ElementPlusResolver()],
       }),
-      tailwindcss()
+      tailwindcss(),
     ],
     css: {
       preprocessorOptions: {
-        scss: { api: 'modern-compiler' },
-      }
+        scss: { api: "modern-compiler" },
+      },
     },
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
     server: {
       hmr: true,
       port: 5179,
+      open: true,
       proxy: {
         [env.VITE_APP_API]: {
           target: env.VITE_APP_HOST,
@@ -50,6 +48,5 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
-  }
-})
-
+  };
+});

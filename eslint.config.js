@@ -14,7 +14,7 @@ export default [
     ignores: ["**/dist/**", "**/dist-ssr/**", "**/coverage/**"],
   },
   {
-    "vue/multi-word-component-names": "off",
+    // "vue/multi-word-component-names": "off",
   },
   ...pluginVue.configs["flat/essential"],
   ...vueTsEslintConfig(),
