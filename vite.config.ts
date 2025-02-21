@@ -9,6 +9,7 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { dayjs } from "element-plus";
 import tailwindcss from "@tailwindcss/vite";
 import compression from "vite-plugin-compression";
+// import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -32,10 +33,19 @@ export default defineConfig(({ command, mode }) => {
         ext: ".gz",
         deleteOriginFile: false,
       }),
+      // br 压缩
       //   compression({
       //     ext: '.br',
       //     algorithm: 'brotliCompress',
       //     deleteOriginFile: false
+      // })
+      //  分析页面大小
+      // visualizer({
+      //   gzipSize: true,
+      //   brotliSize: true,
+      //   emitFile: false,
+      //   filename: "test.html", //分析图生成的文件名
+      //   open: true //如果存在本地服务端口，将在打包后自动展示
       // })
     ],
     css: {
