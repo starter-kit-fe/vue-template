@@ -48,6 +48,25 @@ export default defineConfig(({ command, mode }) => {
       //   open: true //如果存在本地服务端口，将在打包后自动展示
       // })
     ],
+    build: {
+      assetsDir: "static",
+      rollupOptions: {
+        output: {
+          entryFileNames: "static/js/[name]-[hash].js",
+          chunkFileNames: "static/js/[name]-[hash].js",
+          assetFileNames: (assetInfo) => {
+            if (assetInfo?.name?.endsWith(".css")) {
+              return "static/css/[name]-[hash].css";
+            } else {
+              return "static/assets/[name]-[hash].[ext]";
+            }
+          },
+          manualChunks: {
+            "element-plus": ["element-plus"],
+          },
+        },
+      },
+    },
     css: {
       preprocessorOptions: {
         scss: { api: "modern-compiler" },
